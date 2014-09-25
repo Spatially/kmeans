@@ -137,18 +137,36 @@ func kmeans(data []ClusteredObservation, mean []Observation, distanceFunction Di
 	return data, nil
 }
 
-// K-Means Algorithm with smart seeds
-// as known as K-Means ++
-func Kmeans(rawData [][]float64, k int, distanceFunction DistanceFunction, threshold int) ([]int, error) {
-	data := make([]ClusteredObservation, len(rawData))
+//
+func KmeansData(rawData [][]float64) (data []ClusteredObservation) {
+	data = make([]ClusteredObservation, len(rawData))
 	for ii, jj := range rawData {
 		data[ii].Observation = jj
 	}
-	seeds := seed(data, k, distanceFunction)
-	clusteredData, err := kmeans(data, seeds, distanceFunction, threshold)
+	return
+}
+
+//
+func KmeansSeeds(rawData [][]float64, seeds []Observation, distanceFunction DistanceFunction, threshold int) ([]int, error) {
+	clusteredData, err := kmeans(KmeansData(rawData), seeds, distanceFunction, threshold)
 	labels := make([]int, len(clusteredData))
 	for ii, jj := range clusteredData {
 		labels[ii] = jj.ClusterNumber
 	}
 	return labels, err
+}
+
+// K-Means Algorithm with smart seeds
+// as known as K-Means ++
+func Kmeans(rawData [][]float64, k int, distanceFunction DistanceFunction, threshold int) ([]int, error) {
+	return KmeansSeeds(rawData, seed(KmeansData(rawData), k, distanceFunction), distanceFunction, threshold)
+}
+
+func KmeansCenters(rawData [][]float64, centers [][]float64, distanceFunction DistanceFunction, threshold int) ([]int, error) {
+	var seeds []Observation
+	for i := range centers {
+		seeds = append(seeds, centers[i])
+	}
+
+	return KmeansSeeds(rawData, seeds, distanceFunction, threshold)
 }
